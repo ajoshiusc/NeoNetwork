@@ -1,1 +1,3 @@
 # CRSeg
+
+Contrast robust segmentation
