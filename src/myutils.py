@@ -15,7 +15,7 @@ class ConvertToMultiChannelHeadRecod(MapTransform):
         d = dict(data)
         for key in self.keys:
             #result = []
-            result = [d[key] == 1]
+            result = list([d[key] == 1])
             result.append(d[key] == 2)
             result.append(torch.logical_or(d[key] == 3, d[key] == 8))
             d[key] = torch.stack(result, dim=0)
