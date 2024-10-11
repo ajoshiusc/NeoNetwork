@@ -135,7 +135,7 @@ val_transform = Compose(
 
 # %%
 headreco_dir = '/project/ajoshi_27/headreco_out/'
-root_dir = '/project/ajoshi_27/Projects/CRSeg/models'
+root_dir = '/project/ajoshi_1183/Projects/CRSeg/models'
 mode = 'train'
 
 # Read the list of subjects
