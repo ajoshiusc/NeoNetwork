@@ -11,8 +11,6 @@
 
 module load gcc/11.3.0 python/3.9.12 git
 
-conda activate py3cd /project/ajoshi_1183/code_farm/CRSeg/src
-
 ulimit -n 2880
 
 echo "Checking Cuda, GPU USED?"
