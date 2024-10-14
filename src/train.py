@@ -400,7 +400,7 @@ plt.show()
 # ## Check best pytorch model output with the input image and label
 
 # %%
-model.load_state_dict(torch.load(os.path.join(root_dir, "best_metric_model.pth")))
+model.load_state_dict(torch.load(os.path.join(root_dir, "best/best_metric_model.pth")))
 model.eval()
 with torch.no_grad():
     # select one image to evaluate and visualize the model output
