@@ -142,7 +142,7 @@ val_transform = Compose(
         #),
         Resized(keys=["t1_image","t2_image", "label"], spatial_size=[96, 96, 96], mode=("trilinear", "trilinear","nearest")),
         NormalizeIntensityd(keys=["t1_image","t2_image"], nonzero=True, channel_wise=True),
-        #RandomConvexCombination()
+        RandomConvexCombination()
     ]
 )
 
