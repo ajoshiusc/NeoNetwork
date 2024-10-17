@@ -68,25 +68,12 @@ import monai
 import numpy as np
 
 class RandomConvexCombination(monai.transforms.RandomizableTransform):
-    """def __init__(self, keys=[], prob=0.5):
-        super().__init__()
-        self.keys = keys
-        self.prob = prob
-    """
-
     def randomize(self):
         super().randomize(None)
         self._alpha = self.R.uniform(low=0, high=1)
 
     def __call__(self, data):
         d = dict(data)
-        """for key in self.keys:
-            if self.prob > 0 and self.randomize() < self.prob:
-                img1 = d[key]
-                img2 = d[key]  # Assuming T1 and T2 have the same key
-                alpha = self.randomize()
-                d["image"] = alpha * img1 + (1 - alpha) * img2
-        """
         self.randomize()
         if not self._do_transform:
             return d
@@ -148,7 +135,16 @@ val_transform = Compose(
 
 # %%
 headreco_dir =  '/project/ajoshi_27/headreco_out/' #'/home/ajoshi/project_ajoshi_27/headreco_out/' #
+
+if not os.path.exists(headreco_dir):
+    headreco_dir = '/home/ajoshi/project_ajoshi_27/headreco_out/' #'/project/ajoshi_27/headreco_out/' #
+
+
 root_dir = '/project/ajoshi_1183/Projects/CRSeg/models' #'/home/ajoshi/Projects/CRSeg/models' #
+
+if not os.path.exists(root_dir):
+    root_dir = '/home/ajoshi/Projects/CRSeg/models' #'/project/ajoshi_1183/Projects/CRSeg/models' #
+
 mode = 'train'
 
 # Read the list of subjects
