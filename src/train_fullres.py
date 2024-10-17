@@ -51,7 +51,7 @@ date_time = time.strftime("%m_%d_%Y_%H_%M")
 
 ##
 
-model_name = "best_metric_model_augmentation" + date_time
+model_name = "best_metric_model_fullres_augmentation" + date_time
 
 ##
 
@@ -117,8 +117,8 @@ train_transform = Compose(
         #    pixdim=(2.0, 2.0, 2.0),
         #    mode=("bilinear", "nearest"),
         #),
-        Resized(keys=["t1_image","t2_image", "label"], spatial_size=[96, 96, 96], mode=("trilinear","trilinear", "nearest")),
-       # RandSpatialCropd(keys=["image", "label"], roi_size=[224, 224, 144], random_size=False),
+        #Resized(keys=["t1_image","t2_image", "label"], spatial_size=[96, 96, 96], mode=("trilinear","trilinear", "nearest")),
+        RandSpatialCropd(keys=["t1_image", "t2_image","label"], roi_size=[96, 96, 96], random_size=False),
         RandFlipd(keys=["t1_image","t2_image", "label"], prob=0.5, spatial_axis=0),
         RandFlipd(keys=["t1_image","t2_image", "label"], prob=0.5, spatial_axis=1),
         RandFlipd(keys=["t1_image","t2_image", "label"], prob=0.5, spatial_axis=2),
@@ -147,8 +147,8 @@ val_transform = Compose(
 )
 
 # %%
-headreco_dir = '/project/ajoshi_27/headreco_out/'
-root_dir = '/project/ajoshi_1183/Projects/CRSeg/models'
+headreco_dir = '/home/ajoshi/project_ajoshi_27/headreco_out/' # '/project/ajoshi_27/headreco_out/'
+root_dir = '/home/ajoshi/Projects/CRSeg/models' #'/project/ajoshi_1183/Projects/CRSeg/models'
 mode = 'train'
 
 # Read the list of subjects
@@ -173,16 +173,16 @@ for subname in tqdm(sub_lst):
 data_dicts = [{"t1_image": t1_name, "t2_image": t2_name , "label": label_name} for t1_name, t2_name, label_name in zip(train_t1_images, train_t2_images, train_labels)]
 train_files, val_files = data_dicts[:-9], data_dicts[-9:]
 
-train_ds = CacheDataset(data=train_files, transform=train_transform, cache_rate=1.0, num_workers=4)
-#train_ds = Dataset(data=train_files, transform=train_transform)
+#train_ds = CacheDataset(data=train_files, transform=train_transform, cache_rate=1.0, num_workers=4)
+train_ds = Dataset(data=train_files, transform=train_transform)
 
 # use batch_size=2 to load images and use RandCropByPosNegLabeld
 # to generate 2 x 4 images for network training
 train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)
 
 val_ds = CacheDataset(data=val_files, transform=val_transform, cache_rate=1.0, num_workers=4)
-#val_ds = Dataset(data=val_files, transform=val_transform)
-val_loader = DataLoader(val_ds, batch_size=2, num_workers=4)
+val_ds = Dataset(data=val_files, transform=val_transform)
+#val_loader = DataLoader(val_ds, batch_size=2, num_workers=4)
 
 
 # %% [markdown]
@@ -386,7 +386,7 @@ x = [val_interval * (i + 1) for i in range(len(metric_values))]
 y = metric_values
 plt.xlabel("epoch")
 plt.plot(x, y, color="green")
-plt.savefig(os.path.join(root_dir, model_name + "_loss_curve.png"))
+plt.savefig(os.path.join(root_dir, model_name + "_loss_curve_fullres.png"))
 
 plt.figure("train", (18, 6))
 plt.subplot(1, 3, 1)
@@ -407,16 +407,16 @@ x = [val_interval * (i + 1) for i in range(len(metric_values_et))]
 y = metric_values_et
 plt.xlabel("epoch")
 plt.plot(x, y, color="purple")
-plt.savefig(os.path.join(root_dir, model_name + "_metric_curve.png"))
+plt.savefig(os.path.join(root_dir, model_name + "_metric_curve_fullres.png"))
 
 plt.show()
 
 
 # save the metric and loss values to disk
-np.save(os.path.join(root_dir, model_name + "_loss_values.npy"), np.array(epoch_loss_values))
-np.save(os.path.join(root_dir, model_name + "_metric_values.npy"), np.array(metric_values))
-np.save(os.path.join(root_dir, model_name + "_metric_values_tc.npy"), np.array(metric_values_tc))
-np.save(os.path.join(root_dir, model_name + "_metric_values_wt.npy"), np.array(metric_values_wt))
-np.save(os.path.join(root_dir, model_name + "_metric_values_et.npy"), np.array(metric_values_et))
+np.save(os.path.join(root_dir, model_name + "_loss_values_fullres.npy"), np.array(epoch_loss_values))
+np.save(os.path.join(root_dir, model_name + "_metric_values_fullres.npy"), np.array(metric_values))
+np.save(os.path.join(root_dir, model_name + "_metric_values_tc_fullres.npy"), np.array(metric_values_tc))
+np.save(os.path.join(root_dir, model_name + "_metric_values_wt_fullres.npy"), np.array(metric_values_wt))
+np.save(os.path.join(root_dir, model_name + "_metric_values_et_fullres.npy"), np.array(metric_values_et))
 
 
