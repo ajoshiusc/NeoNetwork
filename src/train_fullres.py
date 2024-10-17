@@ -67,6 +67,7 @@ set_determinism(seed=0)
 import monai
 import numpy as np
 
+
 class RandomConvexCombination(monai.transforms.RandomizableTransform):
     def randomize(self):
         super().randomize(None)
@@ -78,13 +79,14 @@ class RandomConvexCombination(monai.transforms.RandomizableTransform):
         if not self._do_transform:
             return d
 
-        d["image"] = self._alpha * d["t1_image"] + (1.0-self._alpha) * d["t2_image"]
-        
+        d["image"] = self._alpha * d["t1_image"] + (1.0 - self._alpha) * d["t2_image"]
+
         return d
+
 
 # %% [markdown]
 # ## Define a new transform to convert brain tumor labels
-# 
+#
 # Here we convert the multi-classes labels into multi-labels segmentation task in One-Hot format.
 
 # %% [markdown]
@@ -94,61 +96,79 @@ class RandomConvexCombination(monai.transforms.RandomizableTransform):
 train_transform = Compose(
     [
         # load 4 Nifti images and stack them together
-        LoadImaged(keys=["t1_image","t2_image",  "label"]),
+        LoadImaged(keys=["t1_image", "t2_image", "label"]),
         ConvertToMultiChannelHeadRecod(keys="label"),
-        EnsureChannelFirstd(keys=["t1_image","t2_image"]),
-        EnsureTyped(keys=["t1_image","t2_image", "label"]),
-        Orientationd(keys=["t1_image","t2_image", "label"], axcodes="RAS"),
-        #Spacingd(
+        EnsureChannelFirstd(keys=["t1_image", "t2_image"]),
+        EnsureTyped(keys=["t1_image", "t2_image", "label"]),
+        Orientationd(keys=["t1_image", "t2_image", "label"], axcodes="RAS"),
+        # Spacingd(
         #    keys=["image", "label"],
         #    pixdim=(2.0, 2.0, 2.0),
         #    mode=("bilinear", "nearest"),
-        #),
-        #Resized(keys=["t1_image","t2_image", "label"], spatial_size=[96, 96, 96], mode=("trilinear","trilinear", "nearest")),
-        RandSpatialCropd(keys=["t1_image", "t2_image","label"], roi_size=[96, 96, 96], random_size=False),
-        RandFlipd(keys=["t1_image","t2_image", "label"], prob=0.5, spatial_axis=0),
-        RandFlipd(keys=["t1_image","t2_image", "label"], prob=0.5, spatial_axis=1),
-        RandFlipd(keys=["t1_image","t2_image", "label"], prob=0.5, spatial_axis=2),
-        NormalizeIntensityd(keys=["t1_image","t2_image"], nonzero=True, channel_wise=True),
-        RandScaleIntensityd(keys=["t1_image","t2_image"], factors=0.1, prob=1.0),
-        RandShiftIntensityd(keys=["t1_image","t2_image"], offsets=0.1, prob=1.0),
-        RandomConvexCombination()
+        # ),
+        # Resized(keys=["t1_image","t2_image", "label"], spatial_size=[96, 96, 96], mode=("trilinear","trilinear", "nearest")),
+        RandSpatialCropd(
+            keys=["t1_image", "t2_image", "label"],
+            roi_size=[96, 96, 96],
+            random_size=False,
+        ),
+        RandFlipd(keys=["t1_image", "t2_image", "label"], prob=0.5, spatial_axis=0),
+        RandFlipd(keys=["t1_image", "t2_image", "label"], prob=0.5, spatial_axis=1),
+        RandFlipd(keys=["t1_image", "t2_image", "label"], prob=0.5, spatial_axis=2),
+        NormalizeIntensityd(
+            keys=["t1_image", "t2_image"], nonzero=True, channel_wise=True
+        ),
+        RandScaleIntensityd(keys=["t1_image", "t2_image"], factors=0.1, prob=1.0),
+        RandShiftIntensityd(keys=["t1_image", "t2_image"], offsets=0.1, prob=1.0),
+        RandomConvexCombination(),
     ]
 )
 val_transform = Compose(
     [
-        LoadImaged(keys=["t1_image","t2_image", "label"]),
+        LoadImaged(keys=["t1_image", "t2_image", "label"]),
         ConvertToMultiChannelHeadRecod(keys="label"),
-        EnsureChannelFirstd(keys=["t1_image","t2_image"]),
-        EnsureTyped(keys=["t1_image","t2_image", "label"]),
-        Orientationd(keys=["t1_image","t2_image", "label"], axcodes="RAS"),
-        #Spacingd(
+        EnsureChannelFirstd(keys=["t1_image", "t2_image"]),
+        EnsureTyped(keys=["t1_image", "t2_image", "label"]),
+        Orientationd(keys=["t1_image", "t2_image", "label"], axcodes="RAS"),
+        # Spacingd(
         #    keys=["image", "label"],
         #    pixdim=(2.0, 2.0, 2.0),
         #    mode=("bilinear", "nearest"),
-        #),
-        Resized(keys=["t1_image","t2_image", "label"], spatial_size=[96, 96, 96], mode=("trilinear", "trilinear","nearest")),
-        NormalizeIntensityd(keys=["t1_image","t2_image"], nonzero=True, channel_wise=True),
-        RandomConvexCombination()
+        # ),
+        Resized(
+            keys=["t1_image", "t2_image", "label"],
+            spatial_size=[96, 96, 96],
+            mode=("trilinear", "trilinear", "nearest"),
+        ),
+        NormalizeIntensityd(
+            keys=["t1_image", "t2_image"], nonzero=True, channel_wise=True
+        ),
+        RandomConvexCombination(),
     ]
 )
 
 # %%
-headreco_dir =  '/project/ajoshi_27/headreco_out/' #'/home/ajoshi/project_ajoshi_27/headreco_out/' #
+headreco_dir = "/project/ajoshi_27/headreco_out/"  #'/home/ajoshi/project_ajoshi_27/headreco_out/' #
 
 if not os.path.exists(headreco_dir):
-    headreco_dir = '/home/ajoshi/project_ajoshi_27/headreco_out/' #'/project/ajoshi_27/headreco_out/' #
+    headreco_dir = "/home/ajoshi/project_ajoshi_27/headreco_out/"  #'/project/ajoshi_27/headreco_out/' #
 
 
-root_dir = '/project/ajoshi_1183/Projects/CRSeg/models' #'/home/ajoshi/Projects/CRSeg/models' #
+root_dir = "/project/ajoshi_1183/Projects/CRSeg/models"  #'/home/ajoshi/Projects/CRSeg/models' #
 
 if not os.path.exists(root_dir):
-    root_dir = '/home/ajoshi/Projects/CRSeg/models' #'/project/ajoshi_1183/Projects/CRSeg/models' #
+    root_dir = "/home/ajoshi/Projects/CRSeg/models"  #'/project/ajoshi_1183/Projects/CRSeg/models' #
 
-mode = 'train'
+
+# check if root_dir has home in it, if yes you are running on local machine. So use smaller dataset
+
+if "home" in root_dir:
+    mode = "train_small"
+else:
+    mode = "train"
 
 # Read the list of subjects
-with open(mode+'.txt', 'r') as myfile:
+with open(mode + ".txt", "r") as myfile:
     sub_lst = myfile.read().splitlines()
 
 train_t1_images = list()
@@ -157,27 +177,36 @@ train_labels = list()
 
 for subname in tqdm(sub_lst):
 
-    subdir = os.path.join(headreco_dir, 'm2m_'+subname)
-    train_t1_images.append(os.path.join(subdir, 'T1fs_conform.nii.gz'))
-    train_t2_images.append(os.path.join(subdir, 'T2_conform.nii.gz'))
-    train_labels.append(os.path.join(subdir, subname + '_masks_contr.nii.gz'))
+    subdir = os.path.join(headreco_dir, "m2m_" + subname)
+    train_t1_images.append(os.path.join(subdir, "T1fs_conform.nii.gz"))
+    train_t2_images.append(os.path.join(subdir, "T2_conform.nii.gz"))
+    train_labels.append(os.path.join(subdir, subname + "_masks_contr.nii.gz"))
 
 
-#train_images = sorted(glob.glob(os.path.join(data_dir, "imagesTr", "*.nii.gz")))
-#train_labels = sorted(glob.glob(os.path.join(data_dir, "labelsTr", "*.nii.gz")))
+# train_images = sorted(glob.glob(os.path.join(data_dir, "imagesTr", "*.nii.gz")))
+# train_labels = sorted(glob.glob(os.path.join(data_dir, "labelsTr", "*.nii.gz")))
 
-data_dicts = [{"t1_image": t1_name, "t2_image": t2_name , "label": label_name} for t1_name, t2_name, label_name in zip(train_t1_images, train_t2_images, train_labels)]
+data_dicts = [
+    {"t1_image": t1_name, "t2_image": t2_name, "label": label_name}
+    for t1_name, t2_name, label_name in zip(
+        train_t1_images, train_t2_images, train_labels
+    )
+]
 train_files, val_files = data_dicts[:-9], data_dicts[-9:]
 
-train_ds = CacheDataset(data=train_files, transform=train_transform, cache_rate=1.0, num_workers=4)
-#train_ds = Dataset(data=train_files, transform=train_transform)
+train_ds = CacheDataset(
+    data=train_files, transform=train_transform, cache_rate=1.0, num_workers=4
+)
+# train_ds = Dataset(data=train_files, transform=train_transform)
 
 # use batch_size=2 to load images and use RandCropByPosNegLabeld
 # to generate 2 x 4 images for network training
 train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)
 
-val_ds = CacheDataset(data=val_files, transform=val_transform, cache_rate=1.0, num_workers=4)
-#val_ds = Dataset(data=val_files, transform=val_transform)
+val_ds = CacheDataset(
+    data=val_files, transform=val_transform, cache_rate=1.0, num_workers=4
+)
+# val_ds = Dataset(data=val_files, transform=val_transform)
 val_loader = DataLoader(val_ds, batch_size=2, num_workers=4)
 
 
@@ -202,7 +231,6 @@ for jj in range(5):
     plt.imshow(val_data_example["image"][0, :, :, 48].detach().cpu(), cmap="gray")
     plt.show()
 
-
     # also visualize the 3 channels label corresponding to this image
     print(f"label shape: {val_data_example['label'].shape}")
     plt.figure("label", (12, 3))
@@ -217,9 +245,16 @@ for jj in range(5):
 # ## Create Model, Loss, Optimizer
 
 # %%
-max_epochs = 300
-val_interval = 5
-VAL_AMP = True
+
+# check if root_dir has home in it, if yes you are running on local machine. So run smaller number of epochs
+if "home" in root_dir:
+    max_epochs = 5
+    val_interval = 1
+    VAL_AMP = True
+else:
+    max_epochs = 300
+    val_interval = 5
+    VAL_AMP = False
 
 # standard PyTorch program style: create SegResNet, DiceLoss and Adam optimizer
 device = torch.device("cuda:0")
@@ -231,7 +266,9 @@ model = SegResNet(
     out_channels=3,
     dropout_prob=0.2,
 ).to(device)
-loss_function = DiceLoss(smooth_nr=0, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
+loss_function = DiceLoss(
+    smooth_nr=0, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True
+)
 optimizer = torch.optim.Adam(model.parameters(), 1e-4, weight_decay=1e-5)
 lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_epochs)
 
@@ -253,14 +290,14 @@ def inference(input):
         )
 
     if VAL_AMP:
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             return _compute(input)
     else:
         return _compute(input)
 
 
 # use amp to accelerate training
-scaler = torch.amp.GradScaler('cuda')
+scaler = torch.amp.GradScaler("cuda")
 # enable cuDNN benchmark
 torch.backends.cudnn.benchmark = True
 
@@ -295,8 +332,7 @@ for epoch in range(max_epochs):
 
         optimizer.zero_grad()
 
-
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
         scaler.scale(loss).backward()
@@ -346,7 +382,7 @@ for epoch in range(max_epochs):
                 best_metrics_epochs_and_time[2].append(time.time() - total_start)
                 torch.save(
                     model.state_dict(),
-                    os.path.join(root_dir, model_name + f"epoch_{epoch}"+".pth"),
+                    os.path.join(root_dir, model_name + f"epoch_{epoch}" + ".pth"),
                 )
                 print("saved new best metric model")
             print(
@@ -363,7 +399,9 @@ print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_e
 
 
 # %%
-print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}, total time: {total_time}.")
+print(
+    f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}, total time: {total_time}."
+)
 
 # %% [markdown]
 # ## Plot the loss and metric
@@ -409,10 +447,23 @@ plt.show()
 
 
 # save the metric and loss values to disk
-np.save(os.path.join(root_dir, model_name + "_loss_values_fullres.npy"), np.array(epoch_loss_values))
-np.save(os.path.join(root_dir, model_name + "_metric_values_fullres.npy"), np.array(metric_values))
-np.save(os.path.join(root_dir, model_name + "_metric_values_tc_fullres.npy"), np.array(metric_values_tc))
-np.save(os.path.join(root_dir, model_name + "_metric_values_wt_fullres.npy"), np.array(metric_values_wt))
-np.save(os.path.join(root_dir, model_name + "_metric_values_et_fullres.npy"), np.array(metric_values_et))
-
-
+np.save(
+    os.path.join(root_dir, model_name + "_loss_values_fullres.npy"),
+    np.array(epoch_loss_values),
+)
+np.save(
+    os.path.join(root_dir, model_name + "_metric_values_fullres.npy"),
+    np.array(metric_values),
+)
+np.save(
+    os.path.join(root_dir, model_name + "_metric_values_tc_fullres.npy"),
+    np.array(metric_values_tc),
+)
+np.save(
+    os.path.join(root_dir, model_name + "_metric_values_wt_fullres.npy"),
+    np.array(metric_values_wt),
+)
+np.save(
+    os.path.join(root_dir, model_name + "_metric_values_et_fullres.npy"),
+    np.array(metric_values_et),
+)
