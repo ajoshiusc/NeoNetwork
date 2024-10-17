@@ -51,7 +51,7 @@ date_time = time.strftime("%m_%d_%Y_%H_%M")
 
 ##
 
-model_name = "best_metric_model_10_14_2024_augmentation" + date_time
+model_name = "best_metric_model_augmentation" + date_time
 
 ##
 
