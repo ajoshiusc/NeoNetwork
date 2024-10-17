@@ -173,16 +173,16 @@ for subname in tqdm(sub_lst):
 data_dicts = [{"t1_image": t1_name, "t2_image": t2_name , "label": label_name} for t1_name, t2_name, label_name in zip(train_t1_images, train_t2_images, train_labels)]
 train_files, val_files = data_dicts[:-9], data_dicts[-9:]
 
-#train_ds = CacheDataset(data=train_files, transform=train_transform, cache_rate=1.0, num_workers=4)
-train_ds = Dataset(data=train_files, transform=train_transform)
+train_ds = CacheDataset(data=train_files, transform=train_transform, cache_rate=1.0, num_workers=4)
+#train_ds = Dataset(data=train_files, transform=train_transform)
 
 # use batch_size=2 to load images and use RandCropByPosNegLabeld
 # to generate 2 x 4 images for network training
 train_loader = DataLoader(train_ds, batch_size=2, shuffle=True, num_workers=4)
 
 val_ds = CacheDataset(data=val_files, transform=val_transform, cache_rate=1.0, num_workers=4)
-val_ds = Dataset(data=val_files, transform=val_transform)
-#val_loader = DataLoader(val_ds, batch_size=2, num_workers=4)
+#val_ds = Dataset(data=val_files, transform=val_transform)
+val_loader = DataLoader(val_ds, batch_size=2, num_workers=4)
 
 
 # %% [markdown]
