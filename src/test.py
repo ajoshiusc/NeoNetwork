@@ -263,7 +263,7 @@ model.load_state_dict(torch.load(os.path.join(root_dir, "best/best_metric_model.
 model.eval()
 with torch.no_grad():
     # select one image to evaluate and visualize the model output
-    val_input = val_ds[6]["t2_image"].unsqueeze(0).to(device)
+    val_input = val_ds[6]["t1_image"].unsqueeze(0).to(device)
     roi_size = (96, 96, 96)
     sw_batch_size = 4
     val_output = inference(val_input)
@@ -271,10 +271,10 @@ with torch.no_grad():
 
 
     val_output = post_trans(val_output[0])
-    plt.figure("t2_image", (24, 6))
+    plt.figure("t1_image", (24, 6))
     plt.subplot(3, 3, 1)
     plt.title(f"image channel {i}")
-    plt.imshow(val_ds[6]["t2_image"][0, :, :, 48].detach().cpu(), cmap="gray")
+    plt.imshow(val_ds[6]["t1_image"][0, :, :, 48].detach().cpu(), cmap="gray")
         
     # visualize the 3 channels label corresponding to this image
     for i in range(3):

@@ -147,10 +147,28 @@ val_transform = Compose(
 )
 
 # %%
-headreco_dir = '/project/ajoshi_27/headreco_out/'
-root_dir = '/project/ajoshi_1183/Projects/CRSeg/models'
-mode = 'train'
+# %%
+headreco_dir = "/project/ajoshi_27/headreco_out/"  #'/home/ajoshi/project_ajoshi_27/headreco_out/' #
 
+if not os.path.exists(headreco_dir):
+    headreco_dir = "/home/ajoshi/project_ajoshi_27/headreco_out/"  #'/project/ajoshi_27/headreco_out/' #
+
+
+root_dir = "/project/ajoshi_1183/Projects/CRSeg/models"  #'/home/ajoshi/Projects/CRSeg/models' #
+
+if not os.path.exists(root_dir):
+    root_dir = "/home/ajoshi/Projects/CRSeg/models"  #'/project/ajoshi_1183/Projects/CRSeg/models' #
+
+
+
+# check if root_dir has home in it, if yes you are running on local machine. So use smaller dataset
+
+if "home" in root_dir:
+    mode = "train_small"
+else:
+    mode = "train"
+
+    
 # Read the list of subjects
 with open(mode+'.txt', 'r') as myfile:
     sub_lst = myfile.read().splitlines()
