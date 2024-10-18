@@ -207,7 +207,7 @@ val_ds = CacheDataset(
     data=val_files, transform=val_transform, cache_rate=1.0, num_workers=4
 )
 # val_ds = Dataset(data=val_files, transform=val_transform)
-val_loader = DataLoader(val_ds, batch_size=2, num_workers=4)
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=4)
 
 
 # %% [markdown]
@@ -249,7 +249,7 @@ for jj in range(5):
 # check if root_dir has home in it, if yes you are running on local machine. So run smaller number of epochs
 if "home" in root_dir:
     max_epochs = 5
-    val_interval = 1
+    val_interval = 2
     VAL_AMP = True
 else:
     max_epochs = 300
