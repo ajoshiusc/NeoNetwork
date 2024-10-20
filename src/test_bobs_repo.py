@@ -171,7 +171,7 @@ torch.backends.cudnn.benchmark = True
 
 # %%
 
-val_org_transforms = Compose(
+test_org_transforms = Compose(
     [
         LoadImaged(keys=["image", "label"]),
         ConvertToMultiChannelHeadRecod(keys="label"),
@@ -182,16 +182,13 @@ val_org_transforms = Compose(
     ]
 )
 
-# val_ds = CacheDataset(data=val_files, transform=val_transform, cache_rate=1.0, num_workers=4)
-val_org_ds = Dataset(data=val_files, transform=test_transform)
-val_org_loader = DataLoader(val_org_ds, batch_size=1, shuffle=False, num_workers=4)
 
 post_transforms = Compose(
     [
         Invertd(
             keys="pred",
-            transform=val_org_transforms,
-            orig_keys="image1",
+            transform=test_org_transforms,
+            orig_keys="image",
             meta_keys="pred_meta_dict",
             orig_meta_keys="image_meta_dict",
             meta_key_postfix="meta_dict",
@@ -210,10 +207,59 @@ post_transforms = Compose(
 val_ds = Dataset(data=val_files, transform=test_transform)
 
 # %%
+import nilearn as nl
+import nibabel as nib
+import numpy as np
+import matplotlib.pyplot as plt
+from nilearn import plotting
+from nilearn.image import resample_to_img
+from nilearn.plotting import plot_roi
+from nilearn.plotting import plot_anat
+from nilearn.plotting import plot_img
+from nilearn.plotting import plot_stat_map
+
+
+def plot_overlay(t1_img, t2_img, label_img, pred_label_img, slice_no):
+    # use plot_roi fron nilearn to plot the overlay of the label and predicted label on the T1 and T2 images
+
+    plot_roi(label_img, bg_img=t1_img, display_mode='z', cut_coords=[slice_no], title='T1 Image with Label Overlay')
+    plot_roi(pred_label_img, bg_img=t1_img, display_mode='z', cut_coords=[slice_no], title='T1 Image with Predicted Label Overlay')
+
+    plot_roi(label_img, bg_img=t2_img, display_mode='z', cut_coords=[slice_no], title='T2 Image with Label Overlay')
+    plot_roi(pred_label_img, bg_img=t2_img, display_mode='z', cut_coords=[slice_no], title='T2 Image with Predicted Label Overlay')
+
+    plt.show()
+
+
 
 model.load_state_dict(torch.load(os.path.join(root_dir, "best/best_metric_model_fullres_augmentation10_17_2024_10_14epoch_159.pth")))
 model.eval()
+
 with torch.no_grad():
+
+    for sub_data in data_dicts:
+        val_input = test_transform(sub_data)
+        val_output = inference(val_input['t1_image'].unsqueeze(0).to(device))
+        val_output = post_trans(val_output[0])
+        val_output = post_transforms({"pred": val_output, "pred_meta_dict": val_input["t1_image_meta_dict"], "image_meta_dict": val_input["t1_image_meta_dict"], "image": val_input["t1_image"]})
+        
+        nifti_header_t1 = nib.load(sub_data["t1_image"]).header
+        nifti_header_t2 = nib.load(sub_data["t2_image"]).header
+        nifti_header_label = nib.load(sub_data["label"]).header
+        nifti_affine_label = nib.load(sub_data["label"]).affine
+
+        pred_label_img = nib.Nifti1Image(val_output[0].cpu().numpy(), nifti_affine_label, header=nifti_header_label)
+        # save the predicted label image
+        pred_label_filename = os.path.join(os.path.dirname(sub_data["label"]), 'pred_label.nii.gz')
+        nib.save(pred_label_img, pred_label_filename)
+
+        plot_overlay(sub_data["t1_image"], sub_data["t2_image"], sub_data["label"], pred_label_filename, 91)
+
+
+
+
+
+
     # select one image to evaluate and visualize the model output
     val_input = val_ds[6]["t1_image"].unsqueeze(0).to(device)
     sw_batch_size = 4
@@ -243,29 +289,6 @@ with torch.no_grad():
 
 # loop over all subjects. For each subject, load the T1, T2 and label files. Use the trained model to predict the labels for the T1 and T2 images. Save the predicted labels in the same folder as the T1 and T2 images.
 # plot the overlay of the predicted labels on the T1 and T2 images. Save the overlay images in the same folder as the T1 and T2 images.
-
-import nilearn as nl
-import nibabel as nib
-import numpy as np
-import matplotlib.pyplot as plt
-from nilearn import plotting
-from nilearn.image import resample_to_img
-from nilearn.plotting import plot_roi
-from nilearn.plotting import plot_anat
-from nilearn.plotting import plot_img
-from nilearn.plotting import plot_stat_map
-
-
-def plot_overlay(t1_img, t2_img, label_img, pred_label_img, slice_no):
-    # use plot_roi fron nilearn to plot the overlay of the label and predicted label on the T1 and T2 images
-
-    plot_roi(label_img[0], bg_img=t1_img[0], display_mode='z', cut_coords=[slice_no], title='T1 Image with Label Overlay')
-    plot_roi(pred_label_img, bg_img=t1_img, display_mode='z', cut_coords=[slice_no], title='T1 Image with Predicted Label Overlay')
-
-    plot_roi(label_img, bg_img=t2_img, display_mode='z', cut_coords=[slice_no], title='T2 Image with Label Overlay')
-    plot_roi(pred_label_img, bg_img=t2_img, display_mode='z', cut_coords=[slice_no], title='T2 Image with Predicted Label Overlay')
-
-    plt.show()
 
 with torch.no_grad():
 
