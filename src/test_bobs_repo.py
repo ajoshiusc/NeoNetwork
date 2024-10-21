@@ -218,6 +218,6 @@ with torch.no_grad():
         )
         # save the predicted label image
         pred_label_filename = os.path.join(
-            output_dir, sub_name + "pred_from_" + t1t2 + ".pvc.frac.nii.gz"
+            output_dir, sub_name + ".pred_from_" + t1t2 + ".pvc.frac.nii.gz"
         )
         nib.save(pred_label_img, pred_label_filename)
