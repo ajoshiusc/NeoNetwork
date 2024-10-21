@@ -40,6 +40,7 @@ import torch
 from glob import glob
 
 import nibabel as nib
+
 # enable cuDNN benchmark
 torch.backends.cudnn.benchmark = True
 
@@ -97,8 +98,8 @@ data_dicts = [
     {"t1_image": t1_name, "t2_image": t2_name, "label": label_name}
     for t1_name, t2_name, label_name in zip(t1_images, t2_images, labels)
 ]
-train_files, val_files = data_dicts[:-9], data_dicts[-9:]
 
+# sub_files, val_files = data_dicts[:-9], data_dicts[-9:]
 
 print_config()
 set_determinism(seed=0)
@@ -114,17 +115,18 @@ test_transform = Compose(
         LoadImaged(keys=["t1_image", "t2_image", "label"]),
         EnsureChannelFirstd(keys=["t1_image", "t2_image", "label"]),
         EnsureTyped(keys=["t1_image", "t2_image", "label"]),
-        # Orientationd(keys=["t1_image", "t2_image","label"], axcodes="RAS"),
+        Orientationd(keys=["t1_image", "t2_image", "label"], axcodes="RAS"),
         NormalizeIntensityd(
             keys=["t1_image", "t2_image"], nonzero=True, channel_wise=True
         ),
     ]
 )
 
-from monai.transforms import InvertibleTransform, NormalizeIntensity, Orientation
+from monai.transforms import InvertibleTransform
 
 # check if applied transforms are instances of InvertibleTransform
 t = NormalizeIntensityd(keys=["t1_image", "t2_image"], nonzero=True, channel_wise=True)
+t = EnsureTyped(keys=["t1_image", "t2_image", "label"])
 print(isinstance(t, InvertibleTransform))
 t = Orientationd(keys=["t1_image", "t2_image", "label"], axcodes="RAS")
 print(isinstance(t, InvertibleTransform))
@@ -169,46 +171,53 @@ post_transforms = Compose(
         Invertd(
             keys="pred",
             transform=test_transform,
-            orig_keys="image",
+            orig_keys="t1_image",
             meta_keys="pred_meta_dict",
-            orig_meta_keys="image_meta_dict",
+            orig_meta_keys="t1_image_meta_dict",
             meta_key_postfix="meta_dict",
             nearest_interp=False,
             to_tensor=True,
-            device="cpu",
+            device="cuda:0",
         ),
-        # Activationsd(keys="pred", sigmoid=True),
+        Activationsd(keys="pred", sigmoid=True),
         # AsDiscreted(keys="pred", threshold=0.5),
     ]
 )
 
 
-val_ds = Dataset(data=val_files, transform=test_transform)
+val_ds = Dataset(data=data_dicts, transform=test_transform)
 model.load_state_dict(torch.load(best_model_file, map_location=torch.device("cuda:0")))
 model.eval()
+
+t1t2 = "t1"
 
 with torch.no_grad():
 
     for sub_data in data_dicts:
         val_data = test_transform(sub_data)
-        val_data["pred"] = inference(val_data["t1_image"].unsqueeze(0).to(device))
-        # val_output = post_trans(val_output[0])
+        val_data["pred"] = inference(val_data[t1t2 + "_image"].unsqueeze(0).to(device))[
+            0
+        ]
         val_output = post_transforms(val_data)
-        # val_output = post_transforms(
-        #    {"pred": val_input["t1_image"], "image": val_input["t1_image"]}
-        # )
 
-        sub_name = os.path.basename(sub_data["t1_image"]).split("_")[0]
+        sub_name = os.path.basename(sub_data[t1t2 + "_image"]).split("_space")[0]
 
-        nifti_header_t1 = nib.load(sub_data["t1_image"]).header
-        nifti_header_t2 = nib.load(sub_data["t2_image"]).header
         nifti_header_label = nib.load(sub_data["label"]).header
         nifti_affine_label = nib.load(sub_data["label"]).affine
 
+        # get the predicted label image
+        pvc_frac_data = val_output["pred"].cpu().numpy()
+
+        mask = np.max(pvc_frac_data, axis=0) > 0.05
+        pvc_frac_data = (
+            3 * pvc_frac_data[0] + 2 * pvc_frac_data[1] + 1 * pvc_frac_data[2]
+        ) * mask
+
         pred_label_img = nib.Nifti1Image(
-            val_output["pred"][0, 1].cpu(), nifti_affine_label, header=nifti_header_t1
+            pvc_frac_data, nifti_affine_label, header=nifti_header_label
         )
         # save the predicted label image
-        pred_label_filename = os.path.join(output_dir, sub_name + "pred.label.nii.gz")
+        pred_label_filename = os.path.join(
+            output_dir, sub_name + "pred_from_" + t1t2 + ".pvc.frac.nii.gz"
+        )
         nib.save(pred_label_img, pred_label_filename)
-
