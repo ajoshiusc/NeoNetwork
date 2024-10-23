@@ -189,7 +189,7 @@ val_ds = Dataset(data=data_dicts, transform=test_transform)
 model.load_state_dict(torch.load(best_model_file, map_location=torch.device("cuda:0")))
 model.eval()
 
-t1t2 = "t1"
+t1t2 = "t2"
 
 with torch.no_grad():
 
