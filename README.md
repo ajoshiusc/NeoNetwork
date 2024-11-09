@@ -1,3 +1,3 @@
-# CRSeg
+# NeoNetwork
 
 Contrast robust segmentation
