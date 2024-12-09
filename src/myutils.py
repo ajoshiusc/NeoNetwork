@@ -15,6 +15,9 @@ class ConvertToMultiChannelHeadRecod(MapTransform):
         d = dict(data)
         for key in self.keys:
             #result = []
+            # if key does not exist in data, skip it
+            if key not in d:
+                continue
             result = list([d[key] == 1])
             result.append(d[key] == 2)
             result.append(torch.logical_or(d[key] == 3, d[key] == 8))
