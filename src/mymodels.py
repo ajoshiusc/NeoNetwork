@@ -50,7 +50,7 @@ class SegResNetLatentOut(nn.Module):
         self,
         spatial_dims: int = 3,
         init_filters: int = 8,
-        in_channels: int = 1,
+        in_channels: int = 1, #t1only # t1 and t2 images
         out_channels: int = 2,
         dropout_prob: float | None = None,
         act: tuple | str = ("RELU", {"inplace": True}),
@@ -197,9 +197,19 @@ class SegResNetLatentOut(nn.Module):
 
 def test_model():
     model = SegResNetLatentOut(spatial_dims=3, init_filters=8, in_channels=1, out_channels=2)
+    model = SegResNetLatentOut(
+        #spatial_dims=3,
+        blocks_down=[1, 2, 2, 4],
+        blocks_up=[1, 1, 1],
+        init_filters=8,
+        in_channels=1,
+        out_channels=2,
+        dropout_prob=0.2)
+    
     print(model)
     input_data = torch.randn(2, 1, 64, 64, 64)
     out, age = model(input_data)
+    print(input_data.shape)
     print(out.shape)
     print(age.shape)
 
