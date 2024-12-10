@@ -107,16 +107,11 @@ val_transform = Compose(
     [
         LoadImaged(keys=["t1_image","t2_image", "label"],allow_missing_keys=True),
         ConvertToGrayWhiteCSF(keys="label",allow_missing_keys=True),
-        EnsureChannelFirstd(keys=["t1_image","t2_image"],allow_missing_keys=True),
+        EnsureChannelFirstd(keys=["t1_image","t2_image"]),
         EnsureTyped(keys=["t1_image","t2_image", "label"],allow_missing_keys=True),
         Orientationd(keys=["t1_image","t2_image", "label"], axcodes="RAS",allow_missing_keys=True),
-        #Spacingd(
-        #    keys=["image", "label"],
-        #    pixdim=(2.0, 2.0, 2.0),
-        #    mode=("bilinear", "nearest"),
-        #),
         Resized(keys=["t1_image","t2_image", "label"], spatial_size=[64, 64, 64], mode=("trilinear", "trilinear","nearest"),allow_missing_keys=True),
-        NormalizeIntensityd(keys=["t1_image","t2_image"], nonzero=True, channel_wise=True,allow_missing_keys=True),
+        #NormalizeIntensityd(keys=["t1_image","t2_image"], nonzero=True, channel_wise=True,allow_missing_keys=True),
     ]
 )
 
@@ -240,7 +235,7 @@ for jj in range(5):
 # ## Create Model, Loss, Optimizer
 
 # %%
-max_epochs = 300
+max_epochs = 00
 val_interval = 5
 VAL_AMP = True
 
@@ -449,12 +444,13 @@ plt.show()
 
 # %%
 
-final_model_dir = '/home/ajoshi/project_ajoshi_27/code_farm/NeoNetwork/src/models'
+final_model_dir =  '/home/ajoshi/project_ajoshi_27/code_farm/NeoNetwork/src/models' #'/home/ajoshi/Projects/NeoNetwork/src/models' # 
 model.load_state_dict(torch.load(os.path.join(final_model_dir, "best_metric_model.pth")))
 model.eval()
 with torch.no_grad():
     # select one image to evaluate and visualize the model output
-    val_input = train_ds[6]["t1_image"].unsqueeze(0).to(device)
+    val_input = torch.cat((val_ds[6]["t1_image"], val_ds[6]["t2_image"]), dim=0).unsqueeze(0).to(device)
+    #train_ds[6]["t1_image"].unsqueeze(0).to(device)
     roi_size = (64, 64, 64)
     sw_batch_size = 4
     val_output = inference(val_input)
