@@ -260,7 +260,7 @@ model = SegResNetLatentOut(
 #model.add_module("fc1", torch.nn.Linear(512, 1))
 
 
-loss_function = DiceLoss(smooth_nr=0, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
+loss_function = DiceLoss(smooth_nr=0, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=False, softmax=True)
 optimizer = torch.optim.Adam(model.parameters(), 1e-4, weight_decay=1e-5)
 lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_epochs)
 

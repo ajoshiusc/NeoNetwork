@@ -166,8 +166,8 @@ class SegResNetLatentOut(nn.Module):
 
         if self.use_conv_final:
             x = self.conv_final(x)
-            # apply softmax to the output
-            x = F.softmax(x, dim=1)
+            ## apply softmax to the output
+            ##x = F.softmax(x, dim=1)
 
 
             #x = F.sigmoid(x)
