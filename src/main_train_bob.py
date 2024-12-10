@@ -267,7 +267,7 @@ lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_e
 dice_metric = DiceMetric(include_background=True, reduction="mean")
 dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
 
-post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+post_trans = Compose([Activations(softmax=True), AsDiscrete(threshold=0.5)])
 
 
 def model_seg(x):
@@ -460,6 +460,7 @@ with torch.no_grad():
 
 
     val_output = post_trans(val_output[0])
+    
     plt.figure("image", (24, 6))
     for i in range(1):
         plt.subplot(1, 4, i + 1)
@@ -473,14 +474,14 @@ with torch.no_grad():
     for i in range(3):
         plt.subplot(1, 3, i + 1)
         plt.title(f"label channel {i}")
-        plt.imshow(val_ds[6]["label"][i, :, :, 32].detach().cpu())
+        plt.imshow((val_ds[6]["label"][i, :, :, 32]).detach().cpu())
     plt.show()
     # visualize the 3 channels model output corresponding to this image
     plt.figure("output", (18, 6))
     for i in range(3):
         plt.subplot(1, 3, i + 1)
         plt.title(f"output channel {i}")
-        plt.imshow((val_output[i, :, :, 32]>0.5).detach().cpu())
+        plt.imshow((val_output[i, :, :, 32]).detach().cpu())
     plt.show()
     plt.pause(1)
 
