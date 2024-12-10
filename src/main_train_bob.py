@@ -124,7 +124,7 @@ val_transform = Compose(
 # Load BOBs repository data
 data_dir = '/home/ajoshi/project_ajoshi_27/BOBS_Repo/V1.0'
 if not os.path.exists(data_dir):
-    sub_data = '/project/ajoshi_27/BOBS_Repo/V1.0'
+    data_dir = '/project/ajoshi_27/BOBS_Repo/V1.0'
 
 # Read tsv file
 import pandas as pd
