@@ -446,12 +446,14 @@ plt.show()
 # ## Check best pytorch model output with the input image and label
 
 # %%
-model.load_state_dict(torch.load(os.path.join(root_dir, "best_metric_model.pth")))
+
+final_model_dir = '/home/ajoshi/project_ajoshi_27/code_farm/NeoNetwork/src/models'
+model.load_state_dict(torch.load(os.path.join(final_model_dir, "best_metric_model.pth")))
 model.eval()
 with torch.no_grad():
     # select one image to evaluate and visualize the model output
-    val_input = val_ds[6]["image"].unsqueeze(0).to(device)
-    roi_size = (96, 96, 96)
+    val_input = train_ds[6]["t1_image"].unsqueeze(0).to(device)
+    roi_size = (64, 64, 64)
     sw_batch_size = 4
     val_output = inference(val_input)
     print('shape of labels ',val_ds[6]["label"].shape)
@@ -462,23 +464,25 @@ with torch.no_grad():
     for i in range(1):
         plt.subplot(1, 4, i + 1)
         plt.title(f"image channel {i}")
-        plt.imshow(val_ds[6]["image"][i, :, :, 48].detach().cpu(), cmap="gray")
+        plt.imshow(val_ds[6]["t1_image"][i, :, :, 32].detach().cpu(), cmap="gray")
     plt.show()
+    plt.pause(1)
     
     # visualize the 3 channels label corresponding to this image
     plt.figure("label", (18, 6))
     for i in range(3):
         plt.subplot(1, 3, i + 1)
         plt.title(f"label channel {i}")
-        plt.imshow(val_ds[6]["label"][i, :, :, 48].detach().cpu())
+        plt.imshow(val_ds[6]["label"][i, :, :, 32].detach().cpu())
     plt.show()
     # visualize the 3 channels model output corresponding to this image
     plt.figure("output", (18, 6))
     for i in range(3):
         plt.subplot(1, 3, i + 1)
         plt.title(f"output channel {i}")
-        plt.imshow(val_output[i, :, :, 48].detach().cpu())
+        plt.imshow((val_output[i, :, :, 32]>0.5).detach().cpu())
     plt.show()
+    plt.pause(1)
 
 # %% [markdown]
 # ## Evaluation on original image spacings
