@@ -12,7 +12,7 @@ from monai.losses import DiceLoss
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.networks.nets import SegResNet
-from myutils import ConvertToMultiChannelHeadRecod
+from myutils import ConvertToGrayWhiteCSF
 from monai.transforms import (
     Activations,
     Activationsd,
@@ -50,6 +50,12 @@ set_determinism(seed=0)
 import monai
 import numpy as np
 
+root_dir ="./models"
+if not os.path.exists(root_dir):
+    os.makedirs(root_dir)
+
+
+
 class RandomConvexCombination(monai.transforms.RandomizableTransform):
     """def __init__(self, keys=[], prob=0.5):
         super().__init__()
@@ -82,7 +88,7 @@ train_transform = Compose(
     [
         # load 4 Nifti images and stack them together
         LoadImaged(keys=["t1_image","t2_image",  "label"],allow_missing_keys=True),
-        ConvertToMultiChannelHeadRecod(keys="label",allow_missing_keys=True),
+        ConvertToGrayWhiteCSF(keys="label",allow_missing_keys=True),
         EnsureChannelFirstd(keys=["t1_image","t2_image"]),
         EnsureTyped(keys=["t1_image","t2_image", "label"],allow_missing_keys=True),
         Orientationd(keys=["t1_image","t2_image", "label"], axcodes="RAS",allow_missing_keys=True),
@@ -100,7 +106,7 @@ train_transform = Compose(
 val_transform = Compose(
     [
         LoadImaged(keys=["t1_image","t2_image", "label"],allow_missing_keys=True),
-        ConvertToMultiChannelHeadRecod(keys="label",allow_missing_keys=True),
+        ConvertToGrayWhiteCSF(keys="label",allow_missing_keys=True),
         EnsureChannelFirstd(keys=["t1_image","t2_image"],allow_missing_keys=True),
         EnsureTyped(keys=["t1_image","t2_image", "label"],allow_missing_keys=True),
         Orientationd(keys=["t1_image","t2_image", "label"], axcodes="RAS",allow_missing_keys=True),
@@ -204,16 +210,25 @@ for jj in range(5):
     #print(val_data_example.get('age', None))
 
     plt.figure("t1 and t2 images", (12, 3))
-    plt.subplot(1, 3, 1)
+    plt.subplot(1, 5, 1)
     plt.title(f"t1 image ")
     plt.imshow(val_data_example["t1_image"][0, :, :, 32].detach().cpu(), cmap="gray")
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 5, 2)
     plt.title(f"t2 image")
     plt.imshow(val_data_example["t2_image"][0, :, :, 32].detach().cpu(), cmap="gray")
-    plt.subplot(1, 3, 3)
-    plt.title(f"label image ")
+    plt.subplot(1, 5, 3)
+    plt.title(f"label image 0")
+    plt.imshow(val_data_example["label"][0, :, :, 32].detach().cpu(), cmap="hot")
+    plt.subplot(1, 5, 4)
+    plt.title(f"label image 1")
     plt.imshow(val_data_example["label"][1, :, :, 32].detach().cpu(), cmap="hot")
+    plt.subplot(1, 5, 5)
+    plt.title(f"label image 2")
+    plt.imshow(val_data_example["label"][2, :, :, 32].detach().cpu(), cmap="hot")
+
+    plt.draw()
     plt.show()
+    plt.pause(1)
     print(f"age: {val_data_example['age']}")
 
 
@@ -236,7 +251,7 @@ model = SegResNetLatentOut(
     blocks_up=[1, 1, 1],
     init_filters=8,
     in_channels=1,
-    out_channels=2,
+    out_channels=3,
     dropout_prob=0.2,
 ).to(device)
 
@@ -255,19 +270,22 @@ dice_metric_batch = DiceMetric(include_background=True, reduction="mean_batch")
 post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
 
 
+def model_seg(x):
+    return model(x)[0]
+
 # define inference method
 def inference(input):
     def _compute(input):
         return sliding_window_inference(
             inputs=input,
-            roi_size=(96, 96, 96),
+            roi_size=(64, 64, 64),
             sw_batch_size=1,
-            predictor=model,
+            predictor=model_seg,
             overlap=0.5,
         )
 
     if VAL_AMP:
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             return _compute(input)
     else:
         return _compute(input)
@@ -303,12 +321,12 @@ for epoch in range(max_epochs):
         step_start = time.time()
         step += 1
         inputs = batch_data["t1_image"].to(device)
-        print(inputs.shape)
-        print(inputs)
-        labels = batch_data.get("label")
+        #print(inputs.shape)
+        #print(inputs)
+        labels = batch_data.get("label").to(device)
         #.to(device) #torch.zeros_like(inputs)
         age = batch_data.get("age").to(device)
-        print(f"age: {age}")
+        #print(f"age: {age}")
         #continue
         optimizer.zero_grad()
 
@@ -469,7 +487,7 @@ with torch.no_grad():
 val_transform = Compose(
     [
         LoadImaged(keys=["image", "label"]),
-        ConvertToMultiChannelHeadRecod(keys="label"),
+        ConvertToGrayWhiteCSF(keys="label"),
         EnsureChannelFirstd(keys=["image"]),
         EnsureTyped(keys=["image", "label"]),
         Orientationd(keys=["image", "label"], axcodes="RAS"),
