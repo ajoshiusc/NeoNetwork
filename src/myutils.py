@@ -51,7 +51,7 @@ class ConvertToGrayWhiteCSF(MapTransform):
         self.label_mapping = label_mapping or {
             "GM": [3, 42, 8, 47, 11, 50, 17, 53, 18, 54],  # Example GM labels
             "WM": [2, 41, 46, 7, 251, 252, 253, 254, 255],  # Example WM labels
-            "CSF": [4, 43, 14, 15, 24],  # Example CSF labels
+            "CSF": [0, 4, 43, 14, 15, 24],  # Example CSF labels, use 0=background as csf
         }
 
     def __call__(self, data: Dict):
