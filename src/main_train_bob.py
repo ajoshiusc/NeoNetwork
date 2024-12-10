@@ -235,7 +235,7 @@ for jj in range(5):
 # ## Create Model, Loss, Optimizer
 
 # %%
-max_epochs = 00
+max_epochs = 500
 val_interval = 5
 VAL_AMP = True
 
@@ -332,7 +332,7 @@ for epoch in range(max_epochs):
             #inputs.shape
             #model(inputs)
             outputs, out_age = model(inputs)
-            loss = loss_function(outputs, labels)
+            loss = loss_function(outputs, labels) + torch.sum((out_age - age)**2.0)
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
@@ -346,6 +346,7 @@ for epoch in range(max_epochs):
     epoch_loss /= step
     epoch_loss_values.append(epoch_loss)
     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+    print(f"Actual ages: {age} and predicted ages: {out_age}")
 
     if (epoch + 1) % val_interval == 0:
         model.eval()
@@ -464,8 +465,6 @@ with torch.no_grad():
         plt.subplot(1, 4, i + 1)
         plt.title(f"image channel {i}")
         plt.imshow(val_ds[6]["t1_image"][i, :, :, 32].detach().cpu(), cmap="gray")
-    plt.show()
-    plt.pause(1)
     
     # visualize the 3 channels label corresponding to this image
     plt.figure("label", (18, 6))
@@ -473,7 +472,6 @@ with torch.no_grad():
         plt.subplot(1, 3, i + 1)
         plt.title(f"label channel {i}")
         plt.imshow((val_ds[6]["label"][i, :, :, 32]).detach().cpu())
-    plt.show()
     # visualize the 3 channels model output corresponding to this image
     plt.figure("output", (18, 6))
     for i in range(3):
