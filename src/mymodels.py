@@ -50,7 +50,7 @@ class SegResNetLatentOut(nn.Module):
         self,
         spatial_dims: int = 3,
         init_filters: int = 8,
-        in_channels: int = 1, #t1only # t1 and t2 images
+        in_channels: int = 2, #t1only # t1 and t2 images
         out_channels: int = 2,
         dropout_prob: float | None = None,
         act: tuple | str = ("RELU", {"inplace": True}),

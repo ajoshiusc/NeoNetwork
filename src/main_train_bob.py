@@ -250,7 +250,7 @@ model = SegResNetLatentOut(
     blocks_down=[1, 2, 2, 4],
     blocks_up=[1, 1, 1],
     init_filters=8,
-    in_channels=1,
+    in_channels=2,
     out_channels=3,
     dropout_prob=0.2,
 ).to(device)
@@ -320,7 +320,9 @@ for epoch in range(max_epochs):
     for batch_data in train_loader_bob:
         step_start = time.time()
         step += 1
-        inputs = batch_data["t1_image"].to(device)
+        t1 = batch_data.get("t1_image")
+        t2 = batch_data.get("t2_image")
+        inputs = torch.cat((t1, t2), dim=1).to(device)        
         #print(inputs.shape)
         #print(inputs)
         labels = batch_data.get("label").to(device)
@@ -355,7 +357,7 @@ for epoch in range(max_epochs):
         with torch.no_grad():
             for val_data in val_loader_bob:
                 val_inputs, val_labels = (
-                    val_data["t1_image"].to(device),
+                    val_inputs := torch.cat((val_data.get("t1_image"), val_data.get("t2_image")), dim=1).to(device),
                     val_data["label"].to(device),
                 )
                 val_outputs = inference(val_inputs)
